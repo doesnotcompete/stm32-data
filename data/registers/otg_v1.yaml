@@ -218,6 +218,13 @@ block/OTG:
       stride: 32
     byte_offset: 2320
     fieldset: DIEPTSIZ
+  - name: DIEPDMA
+    description: Device IN endpoint DMA address register
+    array:
+      len: 16
+      stride: 32
+    byte_offset: 2324
+    fieldset: DIEPDMA
   - name: DTXFSTS
     description: Device IN endpoint transmit FIFO status register
     array:
@@ -247,6 +254,13 @@ block/OTG:
       stride: 32
     byte_offset: 2832
     fieldset: DOEPTSIZ
+  - name: DOEPDMA
+    description: Device OUT endpoint DMA address register
+    array:
+      len: 16
+      stride: 32
+    byte_offset: 2836
+    fieldset: DOEPDMA
   - name: PCGCCTL
     description: Power and clock gating control register
     byte_offset: 3584
@@ -403,8 +417,8 @@ fieldset/DIEPCTL:
     description: SD0PID/SEVNFRM
     bit_offset: 28
     bit_size: 1
-  - name: SODDFRM_SD1PID
-    description: SODDFRM/SD1PID
+  - name: SD1PID_SODDFRM
+    description: SD1PID/SODDFRM
     bit_offset: 29
     bit_size: 1
   - name: EPDIS
@@ -426,28 +440,36 @@ fieldset/DIEPINT:
   description: Device endpoint interrupt register
   fields:
   - name: XFRC
-    description: XFRC
+    description: Transfer completed interrupt
     bit_offset: 0
     bit_size: 1
   - name: EPDISD
-    description: EPDISD
+    description: Endpoint disabled interrupt
     bit_offset: 1
     bit_size: 1
   - name: TOC
-    description: TOC
+    description: Timeout condition
     bit_offset: 3
     bit_size: 1
   - name: ITTXFE
-    description: ITTXFE
+    description: IN token received when Tx FIFO is empty
     bit_offset: 4
     bit_size: 1
   - name: INEPNE
-    description: INEPNE
+    description: IN token received with EP mismatch
     bit_offset: 6
     bit_size: 1
   - name: TXFE
-    description: TXFE
+    description: Transmit FIFO empty
     bit_offset: 7
+    bit_size: 1
+  - name: PKTDRPSTS
+    description: Packet dropped status
+    bit_offset: 11
+    bit_size: 1
+  - name: NAK
+    description: NAK input
+    bit_offset: 13
     bit_size: 1
 fieldset/DIEPMSK:
   description: Device IN endpoint common interrupt mask register
@@ -459,6 +481,10 @@ fieldset/DIEPMSK:
   - name: EPDM
     description: Endpoint disabled interrupt mask
     bit_offset: 1
+    bit_size: 1
+  - name: AHBERRM
+    description: AHB error mask
+    bit_offset: 2
     bit_size: 1
   - name: TOM
     description: Timeout condition mask (Non-isochronous endpoints)
@@ -476,6 +502,14 @@ fieldset/DIEPMSK:
     description: IN endpoint NAK effective mask
     bit_offset: 6
     bit_size: 1
+  - name: TXFURM
+    description: FIFO underrun mask
+    bit_offset: 8
+    bit_size: 1
+  - name: NAKM
+    description: NAK interrupt mask
+    bit_offset: 13
+    bit_size: 1
 fieldset/DIEPTSIZ:
   description: Device endpoint transfer size register
   fields:
@@ -491,6 +525,13 @@ fieldset/DIEPTSIZ:
     description: Multi count
     bit_offset: 29
     bit_size: 2
+fieldset/DIEPDMA:
+  description: Device endpoint DMA address register
+  fields:
+  - name: DMAADDR
+    description: DMA Address
+    bit_offset: 0
+    bit_size: 32
 fieldset/DOEPCTL:
   description: Device endpoint control register
   fields:
@@ -535,8 +576,8 @@ fieldset/DOEPCTL:
     description: SD0PID/SEVNFRM
     bit_offset: 28
     bit_size: 1
-  - name: SODDFRM
-    description: SODDFRM
+  - name: SD1PID_SODDFRM
+    description: SD1PID/SODDFRM
     bit_offset: 29
     bit_size: 1
   - name: EPDIS
@@ -551,24 +592,48 @@ fieldset/DOEPINT:
   description: Device endpoint interrupt register
   fields:
   - name: XFRC
-    description: XFRC
+    description: Transfer completed interrupt
     bit_offset: 0
     bit_size: 1
   - name: EPDISD
-    description: EPDISD
+    description: Endpoint disabled interrupt
+    bit_offset: 1
+    bit_size: 1
+  - name: AHBERR
+    description: AHB Error
     bit_offset: 1
     bit_size: 1
   - name: STUP
-    description: STUP
+    description: SETUP phase done
     bit_offset: 3
     bit_size: 1
   - name: OTEPDIS
-    description: OTEPDIS
+    description: OUT token received when endpoint disabled
     bit_offset: 4
     bit_size: 1
+  - name: STSPHSRX
+    description: Status phase received for control write
+    bit_offset: 5
+    bit_size: 1
   - name: B2BSTUP
-    description: B2BSTUP
+    description: Back-to-back SETUP packets received
     bit_offset: 6
+    bit_size: 1
+  - name: BERR
+    description: Babble error interrupt
+    bit_offset: 12
+    bit_size: 1
+  - name: NAK
+    description: NAK input
+    bit_offset: 13
+    bit_size: 1
+  - name: NYET
+    description: NYET interrupt
+    bit_offset: 14
+    bit_size: 1
+  - name: STPKTRX
+    description: Setup packet received
+    bit_offset: 15
     bit_size: 1
 fieldset/DOEPMSK:
   description: Device OUT endpoint common interrupt mask register
@@ -589,6 +654,30 @@ fieldset/DOEPMSK:
     description: OUT token received when endpoint disabled mask
     bit_offset: 4
     bit_size: 1
+  - name: STSPHSRXM
+    description: Status phase received for control write mask
+    bit_offset: 5
+    bit_size: 1
+  - name: B2BSTUPM
+    description: Back-to-back SETUP packets received mask
+    bit_offset: 6
+    bit_size: 1
+  - name: OUTPKTERRM
+    description: Out packet error mask
+    bit_offset: 8
+    bit_size: 1
+  - name: BERRM
+    description: Babble error interrupt mask
+    bit_offset: 12
+    bit_size: 1
+  - name: NAKMSK
+    description: NAK interrupt mask
+    bit_offset: 13
+    bit_size: 1
+  - name: NYETMSK
+    description: NYET interrupt mask
+    bit_offset: 14
+    bit_size: 1
 fieldset/DOEPTSIZ:
   description: Device OUT endpoint transfer size register
   fields:
@@ -604,6 +693,13 @@ fieldset/DOEPTSIZ:
     description: Received data PID/SETUP packet count
     bit_offset: 29
     bit_size: 2
+fieldset/DOEPDMA:
+  description: Device endpoint DMA address register
+  fields:
+  - name: DMAADDR
+    description: DMA Address
+    bit_offset: 0
+    bit_size: 32
 fieldset/DSTS:
   description: Device status register
   fields:
